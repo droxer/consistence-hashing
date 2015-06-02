@@ -18,6 +18,7 @@ func NewMap(numReplicas int, hashFunc hash) *Map {
 	return &Map{
 		hashFunc:    hashFunc,
 		numReplicas: numReplicas,
+		hashMap:     make(map[int]string),
 	}
 }
 
@@ -37,7 +38,9 @@ func (m *Map) Remove(keys ...string) {
 	for _, key := range keys {
 		for i := 0; i < m.numReplicas; i++ {
 			hash := int(m.hashFunc([]byte(strconv.Itoa(i) + key)))
-			idx := sort.Search(len(m.keys), func(i int) bool { return m.keys[i] == hash })
+			idx := sort.Search(len(m.keys), func(i int) bool {
+				return m.keys[i] >= hash
+			})
 			m.keys = append(m.keys[:idx], m.keys[idx+1:]...)
 			delete(m.hashMap, hash)
 		}
@@ -50,7 +53,7 @@ func (m *Map) Get(key string) string {
 	}
 
 	hash := int(m.hashFunc([]byte(key)))
-	idx := sort.Search(len(m.keys), func(i int) bool { return m.keys[i] > hash })
+	idx := sort.Search(len(m.keys), func(i int) bool { return m.keys[i] >= hash })
 
 	if idx == len(m.keys) {
 		idx = 0
