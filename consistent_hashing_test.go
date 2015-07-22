@@ -1,4 +1,4 @@
-package consistencehashing
+package ch
 
 import (
 	"strconv"
